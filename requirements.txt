@@ -1,0 +1,9 @@
+mkdocs==1.6.1
+mkdocs-material==9.7.7
+pymdown-extensions==12.1
+
+# Used by scripts/generate_pdfs.py to build the downloadable per-guide PDFs
+Markdown==3.9
+PyYAML==6.0.2
+pypdf==6.16.1
+playwright==1.63.0

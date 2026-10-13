@@ -1,0 +1,56 @@
+site_name: CPOC Lab Guides                       # TEMPLATE: your site title
+site_description: Customer Proof of Concept lab guides   # TEMPLATE: your description
+site_author: Your Name                           # TEMPLATE: your name
+
+theme:
+  name: material
+  logo: assets/cpoc-logo.png
+  favicon: assets/cpoc-logo.ico
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - toc.integrate
+    - content.code.copy
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/auth-gate.js
+  - javascripts/pdf-export.js
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+
+nav:
+  - Home: index.md
+  - Example Guide:
+      - Overview: example-guide/index.md
+      - Environment: example-guide/environment.md
+      - Get Started: example-guide/getting-started.md
+      - Scenario 1 - Example Scenario One: example-guide/scenario-1.md
+      - Scenario 2 - Example Scenario Two: example-guide/scenario-2.md
+      - Scenario 3 - Example Scenario Three: example-guide/scenario-3.md
+      - What's Next: example-guide/whats-next.md

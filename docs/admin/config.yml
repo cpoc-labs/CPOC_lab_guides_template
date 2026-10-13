@@ -1,0 +1,25 @@
+backend:
+  name: github
+  repo: YOUR-ORG/YOUR-REPO            # TEMPLATE: change to your GitHub org/repo
+  branch: main
+  base_url: https://REPLACE-WITH-YOUR-WORKER.workers.dev   # TEMPLATE: your GitHub OAuth proxy
+  auth_endpoint: auth
+
+# Saves commit straight to `main` (no draft/review queue), so edits go live
+# as soon as the "Deploy MkDocs site to Pages" workflow finishes running.
+publish_mode: simple
+
+media_folder: "docs/assets/uploads"
+public_folder: "/assets/uploads"
+
+collections:
+  - name: "example_guide"
+    label: "Example Guide"
+    folder: "docs/example-guide"
+    create: true
+    slug: "{{slug}}"
+    media_folder: "images"
+    public_folder: "images"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Body", name: "body", widget: "markdown" }

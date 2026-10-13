@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Sign in — CPOC Lab Guides</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a1929;
+    color: #e8f1f8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .card {
+    width: 100%;
+    max-width: 22rem;
+    margin: 1rem;
+    padding: 2rem;
+    background: #102a40;
+    border: 1px solid #24405a;
+    border-radius: 0.5rem;
+  }
+  .card h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.4rem;
+  }
+  .card p.sub {
+    margin: 0 0 1.5rem;
+    color: #a9c0d3;
+    font-size: 0.9rem;
+  }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+    color: #a9c0d3;
+  }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.55rem 0.7rem;
+    margin-bottom: 1rem;
+    background: #0a1929;
+    border: 1px solid #24405a;
+    border-radius: 0.3rem;
+    color: #e8f1f8;
+    font-size: 1rem;
+  }
+  input:focus {
+    outline: none;
+    border-color: #00bceb;
+  }
+  button {
+    width: 100%;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 0.3rem;
+    background: #00bceb;
+    color: #04263d;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  .error {
+    display: none;
+    margin-bottom: 1rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.3rem;
+    background: #3a1420;
+    border: 1px solid #7a2338;
+    color: #ffb4c2;
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+  <form class="card" id="login-form" autocomplete="off">
+    <h1>CPOC Lab Guides</h1>
+    <p class="sub">Sign in to view the lab guides.</p>
+    <div class="error" id="error">Incorrect username or password.</div>
+    <label for="username">Username</label>
+    <input id="username" name="username" autocomplete="username" autofocus />
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" />
+    <button type="submit">Sign in</button>
+  </form>
+
+  <script>
+    (function () {
+      var VALID_USERNAME = "changeme-user";
+      var VALID_PASSWORD = "changeme-password";
+      var AUTH_KEY = "cpoc_authenticated";
+
+      // Fallback target if there's no ?next= - strip "login/..." off the
+      // current URL to land back at the site root.
+      var fallback = window.location.href.replace(/login\/.*$/, "");
+      var params = new URLSearchParams(window.location.search);
+      var next = params.get("next") || fallback;
+
+      document.getElementById("login-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var u = document.getElementById("username").value.trim();
+        var p = document.getElementById("password").value;
+        if (u === VALID_USERNAME && p === VALID_PASSWORD) {
+          localStorage.setItem(AUTH_KEY, "1");
+          window.location.href = next;
+        } else {
+          document.getElementById("error").style.display = "block";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
