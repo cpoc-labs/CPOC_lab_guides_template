@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 """Detect new guide folders under docs/ and register them everywhere, in the existing style.
 
     python scripts/sync_guides.py           # register new guides in place
@@ -32,7 +33,7 @@ HOME = DOCS / "index.md"
 PDF_SCRIPT = ROOT / "scripts" / "generate_pdfs.py"
 ADMIN = DOCS / "admin" / "config.yml"
 
-NOT_GUIDES = {"assets", "javascripts", "stylesheets", "login", "admin", "images"}
+NOT_GUIDES = {"assets", "javascripts", "stylesheets", "admin", "images"}
 AUTHOR, EMAIL = "Your Name", "you@example.com"  # TEMPLATE: set to the repo owner
 SUBTITLE_LINE = "*Cisco Global Demo Engineering Customer Proof of Concept*"
 DEFAULT_TAG = "Cloud-managed"

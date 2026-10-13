@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 """Keep mkdocs.yml nav labels for scenario pages in sync with each page's H1.
 
     python scripts/sync_nav_titles.py           # rewrite mkdocs.yml in place

@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 """
 Generate guide PDFs (offline) and the guides.json manifest used by the site's PDF buttons.
 

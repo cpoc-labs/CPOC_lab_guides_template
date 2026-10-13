@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 """Repair the common mistakes that break `mkdocs build --strict`, then sync nav/indexes.
 
     python scripts/autofix.py           # fix in place

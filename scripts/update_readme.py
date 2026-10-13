@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 """Regenerate the auto-maintained tables in README.md.
 
     python scripts/update_readme.py           # rewrite README.md in place

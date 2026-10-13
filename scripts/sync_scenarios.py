@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 """Pick up new scenario pages and update the nav and index files to match.
 
     python scripts/sync_scenarios.py           # update files in place

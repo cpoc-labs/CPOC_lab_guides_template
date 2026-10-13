@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 backend:
   name: github
   repo: YOUR-ORG/YOUR-REPO            # TEMPLATE: change to your GitHub org/repo

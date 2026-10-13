@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 site_name: CPOC Lab Guides                       # TEMPLATE: your site title
 site_description: Customer Proof of Concept lab guides   # TEMPLATE: your description
 site_author: Your Name                           # TEMPLATE: your name
@@ -32,7 +33,6 @@ extra_css:
   - stylesheets/extra.css
 
 extra_javascript:
-  - javascripts/auth-gate.js
   - javascripts/pdf-export.js
 
 markdown_extensions:

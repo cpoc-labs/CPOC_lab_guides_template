@@ -1,13 +1,15 @@
 # CPOC Lab Guides — Master Template
 
 A **blank, reusable copy** of the CPOC lab-guide website infrastructure. It contains no lab content, only
-the build system, theme, login gate, PDF export, automation scripts and one small **example guide**
+the build system, theme, PDF export, automation scripts and one small **example guide**
 (`docs/example-guide/`) that shows the page structure. Use it as the master repo: clone it (or click
 **Use this template** on GitHub) every time you need a new, independent lab-guide site.
 
 It is a [MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/)
 static site, deployed to GitHub Pages by GitHub Actions on every push to `main`. Everything is plain
 Markdown: no database, no server.
+
+**New here?** Start with [§12 New user guide](#12-new-user-guide-where-to-add-directories-images-and-scenarios).
 
 | Document | Read it for |
 |---|---|
@@ -27,6 +29,8 @@ Markdown: no database, no server.
 9. [Troubleshooting](#9-troubleshooting)
 10. [Known limitations](#10-known-limitations)
 11. [Complete repository flowchart](#11-complete-repository-flowchart) (directory, styling, Python functions, index, CI)
+12. [New user guide: where to add directories, images and scenarios](#12-new-user-guide-where-to-add-directories-images-and-scenarios)
+13. [Code signature and credits](#13-code-signature-and-credits)
 
 ---
 
@@ -81,14 +85,13 @@ Search for the word `TEMPLATE` and for `Your Name` / `you@example.com` / `YOUR-O
 |---|---|---|
 | 1 | `mkdocs.yml` | `site_name`, `site_description`, `site_author` |
 | 2 | `docs/index.md` | Hero title and sentence, footer name/email, one card per guide |
-| 3 | `docs/login/index.html` | **Change `VALID_USERNAME` and `VALID_PASSWORD`** (see [limitations](#10-known-limitations)) and the page title |
-| 4 | `docs/admin/config.yml` | `repo: YOUR-ORG/YOUR-REPO` and `base_url` (only if you use the Decap CMS; otherwise delete `docs/admin/`) |
-| 5 | `scripts/sync_guides.py` | `AUTHOR, EMAIL` — used when a new guide is generated |
-| 6 | `scripts/generate_pdfs.py` | `GUIDES` entries: cover title, subtitle, date, author, email |
-| 7 | `docs/assets/`, `assets/` | Replace `cisco-logo.png`, `cpoc-logo.png`, `cpoc-logo.ico` with your logos (same file names) |
-| 8 | `docs/stylesheets/extra.css` | Brand colours (optional) |
-| 9 | `docs/javascripts/pdf-export.js` | Cover/header/footer wording in `drawCover` and `addHeaderFooter` (optional) |
-| 10 | `docs/example-guide/` | Rename, rewrite or delete (see [§4.3](#43-add-a-whole-new-guide-or-remove-the-example)) |
+| 3 | `docs/admin/config.yml` | `repo: YOUR-ORG/YOUR-REPO` and `base_url` (only if you use the Decap CMS; otherwise delete `docs/admin/`) |
+| 4 | `scripts/sync_guides.py` | `AUTHOR, EMAIL` — used when a new guide is generated |
+| 5 | `scripts/generate_pdfs.py` | `GUIDES` entries: cover title, subtitle, date, author, email |
+| 6 | `docs/assets/`, `assets/` | Replace `cisco-logo.png`, `cpoc-logo.png`, `cpoc-logo.ico` with your logos (same file names) |
+| 7 | `docs/stylesheets/extra.css` | Brand colours (optional) |
+| 8 | `docs/javascripts/pdf-export.js` | Cover/header/footer wording in `drawCover` and `addHeaderFooter` (optional) |
+| 9 | `docs/example-guide/` | Rename, rewrite or delete (see [§4.3](#43-add-a-whole-new-guide-or-remove-the-example)) |
 
 ---
 
@@ -109,10 +112,8 @@ Search for the word `TEMPLATE` and for `Your Name` / `you@example.com` / `YOUR-O
     ├── assets/                     # Published logos/favicon (+ uploads/ for CMS media)
     ├── stylesheets/extra.css       # Theme colours and .cpoc-* components
     ├── javascripts/
-    │   ├── auth-gate.js            # Redirects visitors who are not signed in to /login/
     │   ├── pdf-export.js           # Builds PDFs in the browser on click
     │   └── guides.json             # GENERATED (gitignored)
-    ├── login/index.html            # Sign-in page
     ├── admin/                      # Decap CMS (optional web editor)
     └── example-guide/              # EXAMPLE guide — one folder per guide
         ├── index.md                # Overview
@@ -220,7 +221,7 @@ and make `data-pdf-guide` equal the folder name and the `GUIDES` key. For search
 | `GUIDES[...]["nav_label"]` equals the exact nav section title | `generate_pdfs.py --manifest` |
 | `GUIDES` key = folder name = `data-pdf-guide` value | `pdf-export.js` ("Unknown guide") |
 | Image paths are relative and the files exist | `--strict` |
-| `auth-gate.js` and `pdf-export.js` stay in `extra_javascript`; `docs/login/index.html` exists | `mkdocs.yml` |
+| `pdf-export.js` stays in `extra_javascript` | `mkdocs.yml` |
 | `docs/javascripts/guides.json` is generated, never committed | `.gitignore` |
 
 ---
@@ -236,8 +237,7 @@ python scripts/generate_pdfs.py --manifest   # once, and after nav changes (need
 mkdocs serve                                  # http://127.0.0.1:8000  (live reload)
 ```
 
-The local login is whatever you set in `docs/login/index.html` (`changeme-user` / `changeme-password`
-in the template). Open the site through `mkdocs serve`, not by double-clicking `site/index.html`.
+Open the site through `mkdocs serve`, not by double-clicking `site/index.html`.
 
 ---
 
@@ -273,7 +273,7 @@ The `punycode DeprecationWarning` printed at the top of the log is a harmless No
 - Workflow permissions: **Settings → Actions → General → Workflow permissions** must allow the workflow to run
   (the workflow itself already requests `pages: write` and `id-token: write`).
 
-Note: the published site is public on the internet for public repos, regardless of the front-end login gate.
+Note: the template has **no login**. The published site is public on the internet for public repos; see [§10](#10-known-limitations) if you need access control.
 
 ---
 
@@ -303,7 +303,6 @@ Otherwise, copy the changed files in `scripts/`, `.github/`, `docs/javascripts/`
 | CI: `Nav section not found: …` | `nav_label` in `GUIDES` differs from the nav section title | Make them identical |
 | PDF button shows "PDF failed" | `guides.json` missing/404, page fetch failed, or CDN blocked | Run `generate_pdfs.py --manifest`; check the browser console |
 | New page missing from sidebar/PDF | Not in the `mkdocs.yml` nav | Scenario page: run `sync_scenarios.py` (file must be `scenario-<N>…md`); other pages: add by hand |
-| Login loop | Browser blocks `localStorage` (private mode) | Allow site storage |
 | CMS cannot log in | `base_url` in `docs/admin/config.yml` is still the placeholder | Deploy an OAuth proxy and set it, or delete `docs/admin/` |
 | Deploy job: `Creating Pages deployment failed … HttpError: Not Found (404)` | GitHub Pages not enabled on the repo (the build job is fine) | Settings → Pages → Source: **GitHub Actions**, then re-run the workflow ([§7](#7-publish-to-github-pages)) |
 | Pages deploy is green but the site is a 404 | Pages source not set to GitHub Actions, or wrong URL | [§7](#7-publish-to-github-pages); use `https://<ORG>.github.io/<REPO>/` |
@@ -313,9 +312,9 @@ Otherwise, copy the changed files in `scripts/`, `.github/`, `docs/javascripts/`
 
 ## 10. Known limitations
 
-- **The login is a front-end gate, not real security.** The username and password are constants in
-  `docs/login/index.html`, and the Markdown/images are public in the repo and on Pages. Treat it as a
-  speed bump; for real access control, host behind an authenticating proxy.
+- **No authentication.** Anyone with the URL can read the site, and the Markdown/images are visible in the
+  repo. For access control, use a private repo with private Pages (plan permitting) or host behind an
+  authenticating proxy.
 - **In-browser PDFs are image-based** (text not selectable) and need internet access to load jsPDF and
   html2canvas from cdnjs. The offline mode produces searchable PDFs.
 - `sync_scenarios.py` only recognises files named `scenario-<number>*.md`.
@@ -360,9 +359,7 @@ flowchart TB
     end
 
     subgraph RUNTIME["Browser JavaScript on every page"]
-        AG["auth-gate.js"]
         PE["pdf-export.js"]
-        LG["login/index.html"]
     end
 
     subgraph CI["GitHub Actions - deploy.yml"]
@@ -392,9 +389,6 @@ flowchart TB
     YML --> BUILD
     CSS --> BUILD
     BUILD --> SITE --> PAGES
-    PAGES --> AG
-    AG -- "not signed in" --> LG
-    LG -- "valid credentials" --> AG
     PAGES --> PE
     PE -- "reads page list" --> GJ
     PE -- "fetches rendered pages" --> SITE
@@ -432,10 +426,8 @@ flowchart LR
     DOCS --> DA["assets/ - cisco-logo.png, cpoc-logo.png/.ico, uploads/"]
     DOCS --> DS["stylesheets/extra.css"]
     DOCS --> DJ["javascripts/"]
-    DJ --> DJ1["auth-gate.js"]
     DJ --> DJ2["pdf-export.js"]
     DJ --> DJ3["guides.json - generated"]
-    DOCS --> DL["login/index.html"]
     DOCS --> DM["admin/ - index.html, config.yml"]
     DOCS --> DG["&lt;guide&gt;/ - one folder per guide, e.g. example-guide"]
     DG --> G1["index.md - overview"]
@@ -620,26 +612,10 @@ flowchart LR
     MAN -.-> N3
 ```
 
-### 11.6 Browser JavaScript
+### 11.6 Browser JavaScript (PDF export)
 
 ```mermaid
 flowchart TD
-    subgraph AGATE["auth-gate.js - loaded on every page"]
-        P["page loads"] --> BU["baseUrl from script src"]
-        BU --> LO{"?logout=1"}
-        LO -- yes --> RM["remove localStorage cpoc_authenticated"]
-        LO -- no --> CK
-        RM --> CK{"on login page?"}
-        CK -- no --> AU{"flag is 1?"}
-        AU -- no --> RD["redirect to login/?next=URL"]
-        AU -- yes --> FT["add Log out link to footer"]
-        CK -- yes --> STAY["do nothing"]
-    end
-
-    RD --> LOGIN["login/index.html: compare to VALID_USERNAME and VALID_PASSWORD"]
-    LOGIN -- match --> SET["set flag, go to next"]
-    LOGIN -- no match --> ERR["show error"]
-
     subgraph PDFX["pdf-export.js - click on a data-pdf-guide link"]
         C["click"] --> BUSY{"busy?"}
         BUSY -- yes --> IGN["ignore"]
@@ -688,3 +664,142 @@ flowchart TD
     DEPLOY -- "404 Not Found" --> NOPAGES["Pages not enabled: Settings, Pages, Source GitHub Actions, then re-run"]
     DEPLOY -- "ok" --> LIVE["Live at https://ORG.github.io/REPO/"]
 ```
+
+---
+
+## 12. New user guide: where to add directories, images and scenarios
+
+Read this first if you have never touched the repo. The golden rules:
+
+- **Everything you write lives under `docs/`.** Nothing outside `docs/` is published.
+- **One folder per guide** directly under `docs/` (e.g. `docs/my-new-guide/`). Never nest a guide inside another.
+- **Images live in an `images/` folder inside the same guide folder**, never in a shared folder.
+- **Never edit by hand:** `docs/javascripts/guides.json` and `site/`. They are generated.
+- Work on a **branch**, never directly on `main` ([GIT-WORKFLOW.md](GIT-WORKFLOW.md)).
+
+### 12.0 Where does each thing go?
+
+```
+docs/
+├── index.md                      <- home page (cards are added for you by sync_scenarios.py)
+├── assets/                       <- site logos only (cisco-logo.png, cpoc-logo.png, cpoc-logo.ico)
+├── <your-guide>/                 <- NEW DIRECTORY GOES HERE (lowercase, hyphens, no spaces)
+│   ├── index.md                  <- overview (auto-generated if missing)
+│   ├── environment.md            <- IPs, credentials, equipment (optional)
+│   ├── getting-started.md        <- (optional)
+│   ├── scenario-1-name.md        <- NEW SCENARIOS GO HERE
+│   ├── scenario-2-name.md
+│   ├── whats-next.md             <- (optional)
+│   └── images/                   <- NEW IMAGES GO HERE
+│       ├── scenario-1-01.png
+│       └── scenario-1-02.png
+```
+
+### 12.1 First-time setup (once per computer)
+
+1. Install **Git** and **Python 3.10+**.
+2. Clone your repo and set up Python ([GIT-WORKFLOW.md §2](GIT-WORKFLOW.md#2-clone), then [§6 Run locally](#6-run-locally)):
+
+   ```bash
+   git clone https://github.com/<ORG>/<REPO>.git
+   cd <REPO>
+   python -m venv .venv
+   .venv\Scripts\activate           # macOS/Linux: source .venv/bin/activate
+   pip install -r requirements.txt
+   python scripts/generate_pdfs.py --manifest
+   mkdocs serve                     # open http://127.0.0.1:8000 and leave it running
+   ```
+
+3. Create your working branch: `git switch -c docs/<what-you-are-adding>`.
+
+### 12.2 Add a new directory (a new guide)
+
+1. Create the folder `docs/<guide-name>/` and inside it `images/`.
+   - Windows PowerShell: `mkdir docs\my-new-guide\images`
+   - macOS/Linux/Git Bash: `mkdir -p docs/my-new-guide/images`
+2. Add at least one scenario file in it, e.g. `docs/my-new-guide/scenario-1-getting-started.md`, starting with
+   `# Scenario 1 - Getting Started` (see [§12.4](#124-add-a-new-scenario)).
+3. Run `python scripts/sync_scenarios.py`. It automatically creates the guide `index.md`, the nav section
+   (sidebar/tab), the home-page card, the PDF entry and the CMS collection.
+4. Open the generated `docs/<guide-name>/index.md` and edit the title, author, "About this CPOC", "Scope" and date.
+5. Edit the new card text/tag in `docs/index.md` and the PDF cover subtitle in `scripts/generate_pdfs.py` (`GUIDES`).
+6. Optional pages (`environment.md`, `getting-started.md`, `whats-next.md`): create them in the guide folder;
+   they are placed in the nav for you, in that order.
+7. Pages that are **not** scenarios and have other names (e.g. `faq.md`): create the file **and** add a line to
+   `mkdocs.yml` under the guide's section: `      - FAQ: my-new-guide/faq.md`.
+8. Check: `mkdocs build --strict` shows no warnings.
+
+To **delete** a whole guide: `git rm -r docs/<guide-name>`, then `python scripts/sync_scenarios.py`.
+
+### 12.3 Add new images
+
+1. Take or export the screenshot (PNG or JPEG; keep each under ~1 MB; crop to the relevant area).
+2. Name it `scenario-<N>-<NN>.png`, where `<N>` is the scenario number and `<NN>` the two-digit order
+   (`scenario-3-07.png`). Use lowercase and no spaces.
+3. Copy it into **that guide's** `images/` folder: `docs/<guide-name>/images/scenario-3-07.png`.
+4. Reference it from the scenario page with a **relative** path (no `docs/`, no drive letters, no leading slash):
+
+   ```markdown
+   ![Short description of the screenshot](images/scenario-3-07.png)
+   ```
+
+5. Check it renders in `mkdocs serve`. A wrong path makes `mkdocs build --strict` (and the deploy) fail.
+6. Commit the image together with the page:
+   `git add docs/<guide-name>/images/scenario-3-07.png docs/<guide-name>/scenario-3-name.md`.
+
+Logos for the whole site are different: replace the three files in `docs/assets/` (same names) and in `assets/`.
+Images uploaded through the CMS go to `docs/assets/uploads/`.
+
+### 12.4 Add a new scenario
+
+1. Pick the next number in the guide (look at the existing `scenario-N-*.md` files).
+2. Create `docs/<guide-name>/scenario-<N>-<short-name>.md`. **The file name must start with `scenario-<N>`.**
+   Copy [docs/example-guide/scenario-1.md](docs/example-guide/scenario-1.md) as a starting point.
+3. The **first line must be** `# Scenario <N> - <Title>`. This line becomes the sidebar label and the
+   description in the guide's "What you'll do" table.
+4. Write the steps. Add screenshots as in [§12.3](#123-add-new-images). Link to the next scenario at the end:
+   `Continue to [Scenario 4](scenario-4-name.md).`
+5. Run `python scripts/sync_scenarios.py`. It adds the page to the nav (in number order), the overview table
+   and the scenario count on the home card.
+6. Update by hand: the "Last updated" date and a row in **Document history** in the guide's `index.md`
+   (and the screenshot count on the home card, if you show one).
+7. Run the pre-push routine ([§4.4](#44-pre-push-routine)); `mkdocs build --strict` must be clean.
+
+To **rename** a scenario: `git mv` the file, run `python scripts/fix_nav.py`, fix links to it, build with `--strict`.
+To **delete** one: `git rm` the page and its images, remove links to it, run `python scripts/sync_scenarios.py`.
+
+### 12.5 Checklist: what you must do every time
+
+| Step | Command / action |
+|---|---|
+| 1. Update and branch | `git switch main && git pull && git switch -c docs/<topic>` |
+| 2. Add or edit files | Directory, images, scenarios as in 12.2-12.4 |
+| 3. Sync indexes | `python scripts/sync_scenarios.py` |
+| 4. Repair nav after renames | `python scripts/fix_nav.py` |
+| 5. Refresh PDF manifest | `python scripts/generate_pdfs.py --manifest` |
+| 6. Validate | `mkdocs build --strict` (no `WARNING`) and look at it with `mkdocs serve` |
+| 7. Commit | `git add <files>` then `git commit -m "Add scenario 4: backup"` |
+| 8. Push | `git push -u origin docs/<topic>` |
+| 9. Pull request and merge | Open a PR into `main`, wait for the green build, merge ([GIT-WORKFLOW.md §8](GIT-WORKFLOW.md#8-pull-request-and-merge)) |
+| 10. Confirm | Watch **Actions**; the site updates at `https://<ORG>.github.io/<REPO>/` |
+
+Common mistakes: wrong image path or missing file; scenario file not named `scenario-<N>...md`; first line
+not `# Scenario N - Title`; guide folder name with spaces or capitals; a new non-scenario page not added to the
+nav; committing straight to `main`; forgetting to enable Pages on a new repo ([§7](#7-publish-to-github-pages)).
+
+---
+
+## 13. Code signature and credits
+
+All code written for this infrastructure (Python scripts in `scripts/`, `docs/javascripts/pdf-export.js`,
+`docs/stylesheets/extra.css`, `mkdocs.yml`, `.github/workflows/deploy.yml`, the `docs/admin/` files,
+`requirements.txt` and `.gitignore`) carries this header as its first line:
+
+```
+Author: Esteban Arguedas (eargueda@cisco.com)
+```
+
+written with the comment syntax of the file type (`#`, `//`, `/* */` or `<!-- -->`). Keep the header when you
+copy, edit or extend these files. New code you add may carry your own name using the same pattern.
+Markdown content pages are documentation, not code, and are not signed; the author appears in each guide's
+`index.md` and Document history table.

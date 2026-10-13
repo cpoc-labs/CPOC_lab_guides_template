@@ -1,3 +1,4 @@
+# Author: Esteban Arguedas (eargueda@cisco.com)
 """Auto-fix mkdocs.yml nav entries that point at renamed/moved pages.
 
 Run before `mkdocs build --strict` (the deploy workflow does this) or locally:

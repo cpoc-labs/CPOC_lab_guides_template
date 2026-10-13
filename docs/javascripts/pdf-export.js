@@ -1,3 +1,4 @@
+// Author: Esteban Arguedas (eargueda@cisco.com)
 /*
  * Builds a guide's PDF in the browser, on demand, from the rendered pages of
  * the site itself - no pre-built PDF file is fetched or linked.
