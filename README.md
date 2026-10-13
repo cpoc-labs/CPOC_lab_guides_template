@@ -26,6 +26,7 @@ Markdown: no database, no server.
 8. [Keeping a project up to date with the template](#8-keeping-a-project-up-to-date-with-the-template)
 9. [Troubleshooting](#9-troubleshooting)
 10. [Known limitations](#10-known-limitations)
+11. [Complete repository flowchart](#11-complete-repository-flowchart) (directory, styling, Python functions, index, CI)
 
 ---
 
@@ -242,12 +243,37 @@ in the template). Open the site through `mkdocs serve`, not by double-clicking `
 
 ## 7. Publish to GitHub Pages
 
-1. Push the repo to GitHub on branch `main`.
-2. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Push any commit (or **Actions → Deploy MkDocs site to Pages → Run workflow**).
-4. The URL appears in the workflow summary: `https://<ORG>.github.io/<REPO>/`.
+**Do this once for every new repo, before the first deploy.** The Pages setting is *not* copied when you
+use the template, and without it the `deploy` job fails (see the error below).
 
-Private repos need a GitHub plan that supports private Pages; otherwise the published site is public.
+1. Push the repo to GitHub on branch `main`.
+2. Open `https://github.com/<ORG>/<REPO>/settings/pages`
+   (**Repo → Settings → Pages**).
+3. Under **Build and deployment → Source**, choose **GitHub Actions** (not "Deploy from a branch").
+4. Run the workflow: **Actions → Deploy MkDocs site to Pages → Run workflow** (or push any commit to `main`).
+5. Wait for both jobs (`build`, `deploy`) to turn green. The URL is shown on the `deploy` job and under
+   Settings → Pages: `https://<ORG>.github.io/<REPO>/`.
+
+**If you skip step 3** the `build` job passes but `deploy` fails with:
+
+```
+Error: Creating Pages deployment failed
+Error: HttpError: Not Found
+Error: Failed to create deployment (status: 404) ... Ensure GitHub Pages has been enabled:
+https://github.com/<ORG>/<REPO>/settings/pages
+```
+
+Fix: do steps 2-4 above and re-run the failed workflow (**Actions → the failed run → Re-run all jobs**).
+The `punycode DeprecationWarning` printed at the top of the log is a harmless Node warning from the action.
+
+**If "GitHub Actions" is not offered or Pages is greyed out:**
+
+- Private repos need a GitHub plan that supports private Pages; on a free plan make the repo public or upgrade.
+- An organization owner may have restricted Pages: check the org's **Settings → Pages**, or ask an admin.
+- Workflow permissions: **Settings → Actions → General → Workflow permissions** must allow the workflow to run
+  (the workflow itself already requests `pages: write` and `id-token: write`).
+
+Note: the published site is public on the internet for public repos, regardless of the front-end login gate.
 
 ---
 
@@ -279,7 +305,9 @@ Otherwise, copy the changed files in `scripts/`, `.github/`, `docs/javascripts/`
 | New page missing from sidebar/PDF | Not in the `mkdocs.yml` nav | Scenario page: run `sync_scenarios.py` (file must be `scenario-<N>…md`); other pages: add by hand |
 | Login loop | Browser blocks `localStorage` (private mode) | Allow site storage |
 | CMS cannot log in | `base_url` in `docs/admin/config.yml` is still the placeholder | Deploy an OAuth proxy and set it, or delete `docs/admin/` |
-| Pages deploy but site is a 404 | Pages source not set to GitHub Actions | [§7](#7-publish-to-github-pages) |
+| Deploy job: `Creating Pages deployment failed … HttpError: Not Found (404)` | GitHub Pages not enabled on the repo (the build job is fine) | Settings → Pages → Source: **GitHub Actions**, then re-run the workflow ([§7](#7-publish-to-github-pages)) |
+| Pages deploy is green but the site is a 404 | Pages source not set to GitHub Actions, or wrong URL | [§7](#7-publish-to-github-pages); use `https://<ORG>.github.io/<REPO>/` |
+| Log shows `DeprecationWarning: The punycode module is deprecated` | Node warning inside the GitHub action | Ignore; it is not an error |
 
 ---
 
@@ -295,3 +323,368 @@ Otherwise, copy the changed files in `scripts/`, `.github/`, `docs/javascripts/`
 - The Decap CMS edits only `title` and `body`; it does not update the nav.
 - Material for MkDocs prints a warning about MkDocs 2.0; versions are pinned in `requirements.txt` so
   builds are unaffected until you choose to upgrade.
+
+---
+
+## 11. Complete repository flowchart
+
+The diagrams below render on GitHub and in VS Code (Markdown preview with Mermaid support). They are
+split by concern so each stays readable: 11.1 whole repo, 11.2 directory tree, 11.3 styling,
+11.4 Python functions, 11.5 index, 11.6 browser JavaScript, 11.7 CI/CD.
+
+### 11.1 Whole repository at a glance
+
+```mermaid
+flowchart TB
+    subgraph AUTHOR["Authoring - what you edit"]
+        MD["docs/&lt;guide&gt;/*.md and images/"]
+        HOME["docs/index.md - home cards"]
+        YML["mkdocs.yml - theme, nav, extra_css, extra_javascript"]
+        CSS["docs/stylesheets/extra.css"]
+        CMS["docs/admin - Decap CMS"]
+    end
+
+    subgraph SCRIPTS["scripts/ - Python automation"]
+        AF["autofix.py"]
+        FN["fix_nav.py"]
+        SS["sync_scenarios.py"]
+        SG["sync_guides.py"]
+        SN["sync_nav_titles.py"]
+        UR["update_readme.py"]
+        GP["generate_pdfs.py"]
+    end
+
+    subgraph GEN["Generated - never commit"]
+        GJ["docs/javascripts/guides.json"]
+        SITE["site/ - built HTML"]
+    end
+
+    subgraph RUNTIME["Browser JavaScript on every page"]
+        AG["auth-gate.js"]
+        PE["pdf-export.js"]
+        LG["login/index.html"]
+    end
+
+    subgraph CI["GitHub Actions - deploy.yml"]
+        BUILD["mkdocs build --strict"]
+        PAGES["GitHub Pages"]
+    end
+
+    MD --> AF
+    YML --> AF
+    AF --> FN --> YML
+    AF --> SS
+    SS --> SG
+    SG -- "new guide: index.md, nav, card, GUIDES, CMS" --> MD
+    SG --> YML
+    SG --> HOME
+    SG --> GP
+    SG --> CMS
+    SS -- "nav, table, counts" --> YML
+    SS --> MD
+    SS --> HOME
+    SS --> SN -- "H1 to nav label" --> YML
+    SS --> UR --> README["README.md tables"]
+    YML --> GP -- "--manifest" --> GJ
+    GJ --> BUILD
+    MD --> BUILD
+    HOME --> BUILD
+    YML --> BUILD
+    CSS --> BUILD
+    BUILD --> SITE --> PAGES
+    PAGES --> AG
+    AG -- "not signed in" --> LG
+    LG -- "valid credentials" --> AG
+    PAGES --> PE
+    PE -- "reads page list" --> GJ
+    PE -- "fetches rendered pages" --> SITE
+    CMS -- "commits to main" --> MD
+```
+
+### 11.2 Directory tree and what each part is for
+
+```mermaid
+flowchart LR
+    ROOT["repo root"]
+
+    ROOT --> F1["mkdocs.yml - site config and NAV"]
+    ROOT --> F2["requirements.txt - pinned deps"]
+    ROOT --> F3["README.md - this file"]
+    ROOT --> F4["GIT-WORKFLOW.md - Git how-to"]
+    ROOT --> F5[".gitignore - site/, caches, guides.json"]
+
+    ROOT --> GH[".github/workflows"]
+    GH --> GH1["deploy.yml - CI/CD"]
+
+    ROOT --> SC["scripts/"]
+    SC --> SC1["autofix.py"]
+    SC --> SC2["fix_nav.py"]
+    SC --> SC3["sync_scenarios.py"]
+    SC --> SC4["sync_guides.py"]
+    SC --> SC5["sync_nav_titles.py"]
+    SC --> SC6["update_readme.py"]
+    SC --> SC7["generate_pdfs.py"]
+
+    ROOT --> AS["assets/ - source logos, not published"]
+
+    ROOT --> DOCS["docs/ - everything published"]
+    DOCS --> D1["index.md - home page cards"]
+    DOCS --> DA["assets/ - cisco-logo.png, cpoc-logo.png/.ico, uploads/"]
+    DOCS --> DS["stylesheets/extra.css"]
+    DOCS --> DJ["javascripts/"]
+    DJ --> DJ1["auth-gate.js"]
+    DJ --> DJ2["pdf-export.js"]
+    DJ --> DJ3["guides.json - generated"]
+    DOCS --> DL["login/index.html"]
+    DOCS --> DM["admin/ - index.html, config.yml"]
+    DOCS --> DG["&lt;guide&gt;/ - one folder per guide, e.g. example-guide"]
+    DG --> G1["index.md - overview"]
+    DG --> G2["environment.md"]
+    DG --> G3["getting-started.md"]
+    DG --> G4["scenario-N-name.md"]
+    DG --> G5["whats-next.md"]
+    DG --> G6["images/ - scenario-N-NN.png"]
+```
+
+### 11.3 Styling
+
+All look-and-feel is the Material theme (`mkdocs.yml`) plus one override file, `docs/stylesheets/extra.css`.
+Components are applied from Markdown with `attr_list` / `md_in_html`, e.g. `[Text](page.md){ .cpoc-btn }`.
+
+```mermaid
+flowchart TD
+    subgraph THEME["mkdocs.yml - theme"]
+        T1["name: material"]
+        T2["palette: slate dark and default light, toggle"]
+        T3["primary: custom, accent: custom"]
+        T4["features: tabs, sections, top, indexes, footer, toc.integrate, code.copy"]
+        T5["logo and favicon: assets/cpoc-logo.png/.ico"]
+        T6["extra_css: stylesheets/extra.css"]
+    end
+
+    subgraph VARS["extra.css - colour variables"]
+        V1["data-md-color-primary custom: --md-primary-fg-color #00bceb, light #6fe0ff, dark #0090b8"]
+        V2["data-md-color-accent custom: --md-accent-fg-color #7fe7ff"]
+        V3["data-md-color-scheme slate: bg #0a1929, fg #e8f1f8, code-bg #102a40, footer #04121f"]
+    end
+
+    subgraph COMP["extra.css - reusable components"]
+        C1[".cpoc-btn - filled button"]
+        C2[".cpoc-btn--outline - outline button"]
+        C3[".cpoc-btn-row - button group"]
+        C4[".cpoc-cta - call-to-action bar"]
+        C5[".cpoc-cta-logos - logo strip"]
+    end
+
+    subgraph HOMECSS["docs/index.md - inline style block"]
+        H1[".cpoc-hero - title banner"]
+        H2[".cpoc-grid - responsive card grid"]
+        H3[".cpoc-card + .cpoc-tag + .cpoc-desc"]
+        H4[".cpoc-stats - scenario count"]
+        H5[".cpoc-footer"]
+    end
+
+    T3 --> V1
+    T3 --> V2
+    T2 --> V3
+    T6 --> COMP
+    COMP --> USE1["guide index.md: PDF button, Start the Lab bar"]
+    HOMECSS --> USE2["home page cards"]
+    C4 -- "removed from PDF by" --> PDFJS["pdf-export.js and pdf:skip blocks"]
+    C3 -- "removed from PDF by" --> PDFJS
+```
+
+To rebrand: change the three colour blocks in `extra.css` and replace the logo files (same names).
+
+### 11.4 Python functions
+
+```mermaid
+flowchart TD
+    subgraph AUTOFIX["autofix.py - entry point used by CI"]
+        a_main["main"] --> a1["fix_page_extensions"]
+        a_main --> a2["fix_images"]
+        a2 --> a3["find_image"]
+        a1 --> a4["guide_dirs"]
+        a2 --> a4
+    end
+
+    a_main --> fn_main
+    a_main --> ss_main
+
+    subgraph FIXNAV["fix_nav.py"]
+        fn_main["main"] --> fn1["git_renames"]
+        fn_main --> fn2["resolve"]
+    end
+
+    subgraph SYNCSC["sync_scenarios.py"]
+        ss_main["main"] --> ss0["warn_ignored"]
+        ss_main --> sg_sync
+        ss_main --> ss1["guides"]
+        ss1 --> ss2["scenarios"]
+        ss_main --> ss3["sync_nav"]
+        ss_main --> ss4["sync_table"]
+        ss4 --> ss5["desc_from_h1"]
+        ss_main --> ss6["sync_home"]
+        ss_main --> sn_sync
+        ss_main --> ur_main
+        ss3 --> ss7["read / write - CRLF safe"]
+        ss4 --> ss7
+        ss6 --> ss7
+    end
+
+    subgraph SYNCG["sync_guides.py"]
+        sg_sync["sync"] --> sg1["guide_folders"]
+        sg_sync --> sg2["guide_title"]
+        sg2 --> sg3["h1"]
+        sg_sync --> sg4["sync_index"]
+        sg4 --> sg5["build_index"]
+        sg5 --> sg6["guide_pages"]
+        sg5 --> sg7["scenario_desc"]
+        sg_sync --> sg8["sync_nav"]
+        sg8 --> sg9["yaml_label"]
+        sg_sync --> sg10["sync_home"]
+        sg10 --> sg11["build_card"]
+        sg11 --> sg12["about_text"]
+        sg_sync --> sg13["sync_pdf_script"]
+        sg_sync --> sg14["sync_admin"]
+        sg_sync --> sg15["registered_folders"]
+        sg15 --> sg16["remove_nav / remove_home / remove_pdf_script / remove_admin"]
+        sg1 --> sg17["scenario_pages"]
+        sg5 --> sg18["humanize / today"]
+    end
+
+    subgraph NAVT["sync_nav_titles.py"]
+        sn_sync["sync"] --> sn1["page_title"]
+    end
+
+    subgraph README["update_readme.py"]
+        ur_main["main"] --> ur1["guides_table"]
+        ur_main --> ur2["scripts_table"]
+        ur1 --> ur3["replace_block"]
+        ur2 --> ur3
+    end
+
+    subgraph PDFS["generate_pdfs.py"]
+        gp_main["main"] --> gp1["load_nav"]
+        gp_main -- "--manifest" --> gp2["write_manifest"]
+        gp2 --> gp3["find_guide_pages"]
+        gp2 --> gp4["page_url"]
+        gp_main -- "no flag: offline PDF" --> gp5["generate_guide_pdf"]
+        gp5 --> gp3
+        gp5 --> gp6["build_toc_html"]
+        gp5 --> gp7["build_content_html"]
+        gp6 --> gp8["slugify"]
+        gp7 --> gp9["strip_cover_duplicate_lines"]
+        gp7 --> gp10["strip_pdf_skip_blocks"]
+        gp7 --> gp11["rewrite_internal_links"]
+    end
+
+    sg13 -. "edits GUIDES dict" .-> PDFS
+```
+
+| Script | Entry command | Key functions |
+|---|---|---|
+| `autofix.py` | `python scripts/autofix.py [--check]` | `fix_page_extensions`, `fix_images`, `find_image`, `guide_dirs`, `main` |
+| `fix_nav.py` | `python scripts/fix_nav.py [--check]` | `git_renames`, `resolve`, `main` |
+| `sync_scenarios.py` | `python scripts/sync_scenarios.py [--check]` | `scenarios`, `guides`, `sync_nav`, `sync_table`, `sync_home`, `warn_ignored`, `main` |
+| `sync_guides.py` | `python scripts/sync_guides.py [--check]` | `sync`, `build_index`, `build_card`, `sync_index/nav/home/pdf_script/admin`, `remove_*`, `guide_title`, `main` |
+| `sync_nav_titles.py` | `python scripts/sync_nav_titles.py [--check]` | `page_title`, `sync` |
+| `update_readme.py` | `python scripts/update_readme.py [--check]` | `guides_table`, `scripts_table`, `replace_block`, `main` |
+| `generate_pdfs.py` | `python scripts/generate_pdfs.py [--manifest]` | `load_nav`, `find_guide_pages`, `write_manifest`, `page_url`, `generate_guide_pdf`, `build_*_html`, `strip_*`, `rewrite_internal_links`, `main` |
+
+### 11.5 The index - three things that must agree
+
+"The index" is the **nav** in `mkdocs.yml`, the **home-page cards** in `docs/index.md`, and each guide's
+**overview table** in `docs/<guide>/index.md`. A fourth copy, the `GUIDES` dict in `generate_pdfs.py`, feeds the PDF.
+
+```mermaid
+flowchart LR
+    NEW["New or deleted scenario-N-name.md"] --> SSC["sync_scenarios.py"]
+    NEWG["New or deleted guide folder"] --> SGU["sync_guides.py, called first by sync_scenarios.py"]
+
+    SSC --> N1["mkdocs.yml nav: page order, sidebar, PDF order"]
+    SSC --> N2["guide index.md: What you will do table"]
+    SSC --> N3["docs/index.md: scenario count on the card"]
+    SSC --> N4["nav labels from page H1 via sync_nav_titles.py"]
+    SGU --> M1["guide index.md created if absent"]
+    SGU --> M2["new nav section"]
+    SGU --> M3["new home card"]
+    SGU --> M4["GUIDES entry in generate_pdfs.py"]
+    SGU --> M5["CMS collection in admin/config.yml"]
+
+    N1 --> GJ["generate_pdfs.py --manifest, writes guides.json"]
+    M4 --> GJ
+    GJ --> PDFBTN["PDF buttons: data-pdf-guide equals folder equals GUIDES key"]
+
+    MAN["By hand: non-scenario pages, screenshot counts, Last updated, Document history, card tag and text"] -.-> N1
+    MAN -.-> N3
+```
+
+### 11.6 Browser JavaScript
+
+```mermaid
+flowchart TD
+    subgraph AGATE["auth-gate.js - loaded on every page"]
+        P["page loads"] --> BU["baseUrl from script src"]
+        BU --> LO{"?logout=1"}
+        LO -- yes --> RM["remove localStorage cpoc_authenticated"]
+        LO -- no --> CK
+        RM --> CK{"on login page?"}
+        CK -- no --> AU{"flag is 1?"}
+        AU -- no --> RD["redirect to login/?next=URL"]
+        AU -- yes --> FT["add Log out link to footer"]
+        CK -- yes --> STAY["do nothing"]
+    end
+
+    RD --> LOGIN["login/index.html: compare to VALID_USERNAME and VALID_PASSWORD"]
+    LOGIN -- match --> SET["set flag, go to next"]
+    LOGIN -- no match --> ERR["show error"]
+
+    subgraph PDFX["pdf-export.js - click on a data-pdf-guide link"]
+        C["click"] --> BUSY{"busy?"}
+        BUSY -- yes --> IGN["ignore"]
+        BUSY -- no --> GEN["generate guideDir"]
+        GEN --> MAN["fetchOk guides.json"]
+        MAN --> PAR["in parallel"]
+        PAR --> LL["loadLibs: jsPDF and html2canvas"]
+        PAR --> LS["loadSection per page"]
+        LL --> JOIN["join"]
+        LS --> JOIN
+        JOIN --> WI["whenImagesLoaded"]
+        WI --> RP["renderPart: canvas, page breaks, slices"]
+        RP --> DC["drawCover"]
+        DC --> HF["addHeaderFooter"]
+        HF --> SAVE["pdf.save pdf_name"]
+    end
+```
+
+### 11.7 CI/CD pipeline and Git flow
+
+```mermaid
+flowchart TD
+    DEV["Edit on a branch"] --> LOCAL["Pre-push routine: sync_scenarios, fix_nav, --manifest, mkdocs build --strict"]
+    LOCAL --> PUSH["git push, open pull request"]
+    PUSH --> REVIEW["Review and merge into main"]
+    REVIEW --> TRIG["Trigger: push to main or workflow_dispatch"]
+
+    subgraph BUILDJOB["job: build - ubuntu-latest"]
+        CO["actions/checkout@v4"] --> PY["actions/setup-python@v5"]
+        PY --> PIP["pip install -r requirements.txt"]
+        PIP --> FIX["python scripts/autofix.py"]
+        FIX -- "unrepaired image or nav" --> FAIL1["job fails"]
+        FIX --> MF["python scripts/generate_pdfs.py --manifest"]
+        MF --> MB["mkdocs build --strict"]
+        MB -- "any warning" --> FAIL2["job fails"]
+        MB --> UP["actions/upload-pages-artifact@v3, path site"]
+    end
+
+    TRIG --> CO
+    UP --> DEPLOY
+
+    subgraph DEPLOYJOB["job: deploy"]
+        DEPLOY["actions/deploy-pages@v4"]
+    end
+
+    DEPLOY -- "404 Not Found" --> NOPAGES["Pages not enabled: Settings, Pages, Source GitHub Actions, then re-run"]
+    DEPLOY -- "ok" --> LIVE["Live at https://ORG.github.io/REPO/"]
+```
